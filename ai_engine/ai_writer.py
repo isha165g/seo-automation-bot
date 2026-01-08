@@ -13,17 +13,28 @@ def generate_text(prompt):
 
     stdout, stderr = process.communicate(prompt)
 
-    if stderr:
-        print("Ollama errors (ignored):", stderr)
+    def clean_ai_output(text):
+        # Take only the first non-empty line
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        if not lines:
+            return ""
+        return lines[0]
 
-    return stdout.strip()
+    cleaned = clean_ai_output(stdout)
+    cleaned = cleaned[:155]    # hard SEO limit
+    return cleaned
+
 
 if __name__ == "__main__":
     prompt = (
-        "Write a clear SEO meta description under 155 characters "
-        "for an ERP and AI services company. "
-        "No marketing fluff. Simple and factual."
-    )
+    "Write ONE single-sentence SEO meta description.\n"
+    "- Maximum 155 characters\n"
+    "- Do NOT write explanations, stories, or examples\n"
+    "- Do NOT use quotes\n"
+    "- Do NOT add headings or new lines\n"
+    "- Output ONLY the meta description text\n"
+    "Context: ERP and AI services company."
+)
 
     text = generate_text(prompt)
 
