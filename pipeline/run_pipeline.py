@@ -45,7 +45,7 @@ def main():
         ai_text = None
 
     # 6. Apply fixes to HTML
-    modified_html = modify_html(html)
+    modified_html = modify_html(html, meta_description_text=ai_text)
     with open(MODIFIED_HTML, "w", encoding="utf-8") as f:
         f.write(modified_html)
 

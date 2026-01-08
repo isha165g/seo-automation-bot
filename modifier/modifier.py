@@ -35,11 +35,12 @@ def add_missing_alt_tags(soup):
         if not img.get("alt"):
             img["alt"] = "Image description"
 
-def modify_html(html):
+def modify_html(html, meta_description_text=None):
     soup = BeautifulSoup(html, "html.parser")
 
-    # SAFE DEFAULT TEXT (temporary, AI comes later)
-    add_meta_description(soup, "This is a sample meta description.")
+    if meta_description_text:
+        add_meta_description(soup, meta_description_text)
+
     add_missing_alt_tags(soup)
 
     return soup.prettify()
