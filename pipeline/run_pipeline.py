@@ -35,11 +35,20 @@ def main():
     # 5. AI for meta description (only if missing)
     if "Missing meta description" in seo_report.get("meta_description", []):
         print("\nUsing AI to generate meta description...")
-        ai_text = generate_text(
-            "Write a clear SEO meta description under 155 characters "
-            "for an ERP and AI services company. "
-            "No marketing fluff."
+        page_title = seo_data.get("title") or ""
+        page_text = seo_data.get("page_text") or ""
+
+        prompt = (
+            "Write ONE single-sentence SEO meta description.\n"
+            "- Maximum 155 characters\n"
+            "- No quotes, hashtags, or explanations\n"
+            "- Neutral, factual tone\n"
+            "- Output ONLY the description text\n\n"
+            f"Page title: {page_title}\n"
+            f"Page content summary: {page_text}"
         )
+
+        ai_text = generate_text(prompt)
         print("AI suggestion:", ai_text)
     else:
         ai_text = None

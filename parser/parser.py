@@ -30,10 +30,11 @@ def extract_seo_tags(html):
         })
 
     return {
-        "title": title,
+        "title": title.strip() if title else None,
         "meta_description": meta_description,
         "h1_tags": h1_tags,
-        "images": images
+        "images": images,
+        "page_text": extract_page_text(html)
     }
 
 if __name__ == "__main__":
@@ -42,3 +43,14 @@ if __name__ == "__main__":
     if html:
         seo_data = extract_seo_tags(html)
         print(json.dumps(seo_data, indent=4))
+        
+def extract_page_text(html, max_chars=300):
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Remove non-content tags
+    for tag in soup(["script", "style", "noscript"]):
+        tag.decompose()
+
+    text = soup.get_text(separator=" ", strip=True)
+    return text[:max_chars]
+        
