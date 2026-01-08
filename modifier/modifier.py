@@ -43,7 +43,7 @@ def modify_html(html, meta_description_text=None):
 
     add_missing_alt_tags(soup)
 
-    return soup.prettify()
+    return str(soup)
 
 if __name__ == "__main__":
     html = load_html(INPUT_HTML)

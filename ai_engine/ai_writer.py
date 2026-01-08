@@ -21,6 +21,7 @@ def generate_text(prompt):
         return lines[0]
 
     cleaned = clean_ai_output(stdout)
+    cleaned = cleaned.strip('"').strip("'")
     cleaned = cleaned[:155]    # hard SEO limit
     return cleaned
 

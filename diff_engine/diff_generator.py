@@ -1,38 +1,20 @@
-from diff_match_patch import diff_match_patch
-import os
+from bs4 import BeautifulSoup
 
-ORIGINAL_FILE = "data/pages/home.html"
-MODIFIED_FILE = "data/pages/home_modified.html"
+def extract_meta_description(html):
+    soup = BeautifulSoup(html, "html.parser")
+    tag = soup.find("meta", attrs={"name": "description"})
+    return str(tag) if tag else ""
 
-def load_file(path):
-    if not os.path.exists(path):
-        print(f"File not found: {path}")
-        return None
+def generate_diff(original_html, modified_html):
+    original_meta = extract_meta_description(original_html)
+    modified_meta = extract_meta_description(modified_html)
 
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
+    diffs = []
 
-def generate_diff(original, modified):
-    dmp = diff_match_patch()
-    diffs = dmp.diff_main(original, modified)
-    dmp.diff_cleanupSemantic(diffs)
+    if original_meta != modified_meta:
+        if original_meta:
+            diffs.append((-1, original_meta))
+        if modified_meta:
+            diffs.append((1, modified_meta))
+
     return diffs
-
-def print_diff(diffs):
-    for op, text in diffs:
-        if op == 0:
-            continue
-        elif op == -1:
-            print("[- Removed ]")
-            print(text)
-        elif op == 1:
-            print("[+ Added ]")
-            print(text)
-
-if __name__ == "__main__":
-    original_html = load_file(ORIGINAL_FILE)
-    modified_html = load_file(MODIFIED_FILE)
-
-    if original_html and modified_html:
-        diffs = generate_diff(original_html, modified_html)
-        print_diff(diffs)
