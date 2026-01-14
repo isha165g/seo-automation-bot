@@ -12,6 +12,16 @@ def load_html(path):
     with open(path, "r", encoding="utf-8") as file:
         return file.read()
 
+def extract_page_text(html, max_chars=300):
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Remove non-content tags
+    for tag in soup(["script", "style", "noscript"]):
+        tag.decompose()
+
+    text = soup.get_text(separator=" ", strip=True)
+    return text[:max_chars]
+
 def extract_seo_tags(html):
     soup = BeautifulSoup(html, "html.parser")
 
@@ -44,13 +54,5 @@ if __name__ == "__main__":
         seo_data = extract_seo_tags(html)
         print(json.dumps(seo_data, indent=4))
         
-def extract_page_text(html, max_chars=300):
-    soup = BeautifulSoup(html, "html.parser")
 
-    # Remove non-content tags
-    for tag in soup(["script", "style", "noscript"]):
-        tag.decompose()
-
-    text = soup.get_text(separator=" ", strip=True)
-    return text[:max_chars]
         
