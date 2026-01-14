@@ -7,6 +7,7 @@ from suggestions.suggestions import generate_fix_suggestions
 from modifier.modifier import modify_html
 from diff_engine.diff_generator import generate_diff
 from ai_engine.ai_writer import generate_text
+from ai_engine.tasks import generate_meta_description
 
 ORIGINAL_HTML = "data/pages/home.html"
 MODIFIED_HTML = "data/pages/home_modified.html"
@@ -33,26 +34,15 @@ def main():
     print("Fix suggestions generated ✓")
 
     # 5. AI for meta description (only if missing)
+    ai_text = None
+
     if "Missing meta description" in seo_report.get("meta_description", []):
         print("\nUsing AI to generate meta description...")
-        page_title = seo_data.get("title") or ""
-        page_text = seo_data.get("page_text") or ""
-
-        prompt = (
-            "Write ONE single-sentence SEO meta description.\n"
-            "- Maximum 155 characters\n"
-            "- No quotes, hashtags, or explanations\n"
-            "- Neutral, factual tone\n"
-            "- Output ONLY the description text\n\n"
-            f"Page title: {page_title}\n"
-            f"Page content summary: {page_text}"
-        )
-
-        ai_text = generate_text(prompt)
+        ai_text = generate_meta_description(seo_data)
         print("AI suggestion:", ai_text)
     else:
-        ai_text = None
-
+        print("Meta description already present — no AI action needed.")    
+    
     # 6. Apply fixes to HTML
     modified_html = modify_html(html, meta_description_text=ai_text)
     with open(MODIFIED_HTML, "w", encoding="utf-8") as f:
