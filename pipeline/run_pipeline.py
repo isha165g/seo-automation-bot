@@ -1,6 +1,8 @@
 import sys
 sys.path.append(".")
 
+from crawler.static_crawler import fetch_page
+from crawler.dynamic_crawler import fetch_dynamic_page
 from parser.parser import load_html, extract_seo_tags
 from seo_rules.rules import run_seo_checks
 from suggestions.suggestions import generate_fix_suggestions
@@ -11,6 +13,9 @@ from ai_engine.tasks import generate_meta_description
 from ai_engine.tasks import generate_alt_text
 from ai_engine.tasks import rewrite_title
 
+USE_DYNAMIC_RENDERING = True  # set False for static sites
+TARGET_URL = "https://react.dev"
+
 ORIGINAL_HTML = "data/pages/home.html"
 MODIFIED_HTML = "data/pages/home_modified.html"
 
@@ -18,7 +23,16 @@ def main():
     print("\n=== SEO AUTOMATION PIPELINE STARTED ===\n")
 
     # 1. Load HTML
-    html = load_html(ORIGINAL_HTML)
+    if USE_DYNAMIC_RENDERING:
+        print("Using dynamic crawler (Playwright)...")
+        html = fetch_dynamic_page(TARGET_URL)
+    else:
+        print("Using static crawler...")
+        html = fetch_page(TARGET_URL)
+
+    with open(ORIGINAL_HTML, "w", encoding="utf-8") as f:
+        f.write(html)
+
     if not html:
         print("Failed to load HTML")
         return
@@ -53,8 +67,8 @@ def main():
 
     if image_issues:
         print("\nUsing AI to generate alt text for images...")
-
-        for issue in image_issues:
+        MAX_ALT_IMAGES = 5  # safety limit
+        for issue in image_issues[:MAX_ALT_IMAGES]:
             idx = issue["index"]
             if idx >= len(images):
                 continue
@@ -62,10 +76,17 @@ def main():
 
 
             ai_alt = generate_alt_text(image)
-            if ai_alt:
-                alt_texts[idx] = ai_alt
 
+            if not ai_alt:
+                print(f"⚠️ Skipped alt text for image {idx} (invalid or timeout)")
+                continue
+
+            alt_texts[idx] = ai_alt
             print(f"AI alt text for image {idx}:", ai_alt)
+
+        if len(image_issues) > MAX_ALT_IMAGES:
+            print(f"⚠️ Skipping alt text for {len(image_issues) - MAX_ALT_IMAGES} images (limit reached)")
+
     else:
         print("\nAlt text for image exists — no AI action needed.")
         
