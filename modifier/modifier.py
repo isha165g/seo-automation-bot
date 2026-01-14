@@ -1,22 +1,4 @@
 from bs4 import BeautifulSoup
-import os
-
-INPUT_HTML = "data/pages/home.html"
-OUTPUT_HTML = "data/pages/home_modified.html"
-
-def load_html(path):
-    if not os.path.exists(path):
-        print("Input HTML file not found")
-        return None
-
-    with open(path, "r", encoding="utf-8") as file:
-        return file.read()
-
-def save_html(html, path):
-    with open(path, "w", encoding="utf-8") as file:
-        file.write(html)
-
-    print(f"Modified HTML saved to {path}")
 
 def add_meta_description(soup, description_text):
     head = soup.find("head")
@@ -30,24 +12,25 @@ def add_meta_description(soup, description_text):
         new_meta.attrs["content"] = description_text
         head.append(new_meta)
 
-def add_missing_alt_tags(soup):
-    for img in soup.find_all("img"):
-        if not img.get("alt"):
-            img["alt"] = "Image description"
-
-def modify_html(html, meta_description_text=None):
+def modify_html(html, meta_description_text=None, alt_texts=None):
     soup = BeautifulSoup(html, "html.parser")
 
+    # Apply AI-generated alt text safely
+    if alt_texts:
+        images = soup.find_all("img")
+
+        for idx, alt in alt_texts.items():
+            if idx >= len(images):
+                continue
+
+            img = images[idx]
+            existing_alt = img.get("alt", "").strip().lower()
+
+            if not existing_alt or existing_alt in ["image", "photo", "picture", "logo"]:
+                img["alt"] = alt
+
+    # Apply AI-generated meta description safely
     if meta_description_text:
         add_meta_description(soup, meta_description_text)
 
-    add_missing_alt_tags(soup)
-
     return str(soup)
-
-if __name__ == "__main__":
-    html = load_html(INPUT_HTML)
-
-    if html:
-        modified_html = modify_html(html)
-        save_html(modified_html, OUTPUT_HTML)

@@ -30,12 +30,21 @@ def check_h1(h1_tags):
 
     return issues
 
-def check_image_alts(images):
+def check_images(images):
     issues = []
+    for index, img in enumerate(images):
+        alt = (img.get("alt") or "").strip().lower()
 
-    for img in images:
-        if not img.get("alt"):
-            issues.append(f"Image missing alt text: {img.get('src')}")
+        if not alt:
+            issues.append({
+                "type": "missing_alt",
+                "index": index
+            })
+        elif alt in ["image", "photo", "picture", "logo"]:
+            issues.append({
+                "type": "generic_alt",
+                "index": index
+            })
 
     return issues
 
@@ -44,7 +53,7 @@ def run_seo_checks(seo_data):
         "title": check_title(seo_data.get("title")),
         "meta_description": check_meta_description(seo_data.get("meta_description")),
         "h1": check_h1(seo_data.get("h1_tags")),
-        "images": check_image_alts(seo_data.get("images"))
+        "images": check_images(seo_data.get("images"))
     }
 
     return report

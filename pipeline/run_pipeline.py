@@ -8,6 +8,7 @@ from modifier.modifier import modify_html
 from diff_engine.diff_generator import generate_diff
 from ai_engine.ai_writer import generate_text
 from ai_engine.tasks import generate_meta_description
+from ai_engine.tasks import generate_alt_text
 
 ORIGINAL_HTML = "data/pages/home.html"
 MODIFIED_HTML = "data/pages/home_modified.html"
@@ -43,8 +44,35 @@ def main():
     else:
         print("Meta description already present — no AI action needed.")    
     
+    alt_texts = {}
+
+    image_issues = seo_report.get("images", [])
+    images = seo_data.get("images", [])
+
+    if image_issues:
+        print("\nUsing AI to generate alt text for images...")
+
+        for issue in image_issues:
+            idx = issue["index"]
+            if idx >= len(images):
+                continue
+            image = images[idx]
+
+
+            ai_alt = generate_alt_text(image)
+            if ai_alt:
+                alt_texts[idx] = ai_alt
+
+            print(f"AI alt text for image {idx}:", ai_alt)
+
+    
     # 6. Apply fixes to HTML
-    modified_html = modify_html(html, meta_description_text=ai_text)
+    modified_html = modify_html(
+        html,
+        meta_description_text=ai_text,
+        alt_texts=alt_texts
+    )
+
     with open(MODIFIED_HTML, "w", encoding="utf-8") as f:
         f.write(modified_html)
 
