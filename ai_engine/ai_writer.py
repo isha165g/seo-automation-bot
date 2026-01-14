@@ -2,7 +2,7 @@ import subprocess
 
 def generate_text(prompt):
     process = subprocess.Popen(
-        ["ollama", "run", "phi"], #mistral / phi
+        ["ollama", "run", "mistral"], #mistral / phi
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -22,7 +22,15 @@ def generate_text(prompt):
 
     cleaned = clean_ai_output(stdout)
     cleaned = cleaned.strip('"').strip("'")
-    cleaned = cleaned[:155]    # hard SEO limit
+
+    MAX_LEN = 155
+    if len(cleaned) > MAX_LEN:
+        truncated = cleaned[:MAX_LEN]
+        # Try to cut at last full stop
+        if "." in truncated:
+            truncated = truncated.rsplit(".", 1)[0] + "."
+        cleaned = truncated
+
     return cleaned
 
 

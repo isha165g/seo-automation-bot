@@ -6,7 +6,9 @@ Only text. No logic.
 META_DESCRIPTION_PROMPT = (
     "Write ONE single-sentence SEO meta description.\n"
     "- Maximum 155 characters\n"
-    "- No quotes, hashtags, emojis, or explanations\n"
+    "- Do NOT explain what you are writing\n"
+    "- Do NOT mention 'meta description'\n"
+    "- Do NOT repeat the page title verbatim\n"
     "- Neutral, factual tone\n"
     "- Output ONLY the description text\n\n"
     "Page title: {title}\n"
