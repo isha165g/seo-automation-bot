@@ -9,6 +9,7 @@ from diff_engine.diff_generator import generate_diff
 from ai_engine.ai_writer import generate_text
 from ai_engine.tasks import generate_meta_description
 from ai_engine.tasks import generate_alt_text
+from ai_engine.tasks import rewrite_title
 
 ORIGINAL_HTML = "data/pages/home.html"
 MODIFIED_HTML = "data/pages/home_modified.html"
@@ -34,7 +35,7 @@ def main():
     fixes = generate_fix_suggestions(seo_report)
     print("Fix suggestions generated ✓")
 
-    # 5. AI for meta description (only if missing)
+    # 5a. AI for meta description (only if missing)
     ai_text = None
 
     if "Missing meta description" in seo_report.get("meta_description", []):
@@ -44,6 +45,7 @@ def main():
     else:
         print("Meta description already present — no AI action needed.")    
     
+    # 5b. AI for image alt (only if missing)
     alt_texts = {}
 
     image_issues = seo_report.get("images", [])
@@ -64,13 +66,27 @@ def main():
                 alt_texts[idx] = ai_alt
 
             print(f"AI alt text for image {idx}:", ai_alt)
+    else:
+        print("\nAlt text for image exists — no AI action needed.")
+        
+    # 5c. AI for title (only if missing)
+    new_title = None
 
-    
+    title_issues = seo_report.get("title", [])
+
+    if title_issues:
+        print("\nUsing AI to rewrite page title...")
+        new_title = rewrite_title(seo_data)
+        print("AI title suggestion:", new_title)
+    else:
+        print("\nTitle is SEO-friendly — no AI action needed.")
+
     # 6. Apply fixes to HTML
     modified_html = modify_html(
         html,
         meta_description_text=ai_text,
-        alt_texts=alt_texts
+        alt_texts=alt_texts,
+        new_title=new_title
     )
 
     with open(MODIFIED_HTML, "w", encoding="utf-8") as f:

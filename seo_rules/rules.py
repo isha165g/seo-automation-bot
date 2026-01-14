@@ -4,9 +4,9 @@ def check_title(title):
     issues = []
 
     if not title:
-        issues.append("Missing <title> tag")
-    elif len(title) > 60:
-        issues.append("Title tag is longer than 60 characters")
+        issues.append("Missing title")
+    elif len(title.strip()) > 60:
+        issues.append("Title too long")
 
     return issues
 
