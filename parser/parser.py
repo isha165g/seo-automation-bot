@@ -23,6 +23,8 @@ def extract_page_text(html, max_chars=300):
     return text[:max_chars]
 
 def extract_seo_tags(html):
+    print("Parsing HTML (SEO extraction)...", flush=True)
+
     soup = BeautifulSoup(html, "html.parser")
 
     title = soup.title.string if soup.title else None
@@ -33,11 +35,13 @@ def extract_seo_tags(html):
     h1_tags = [h1.get_text(strip=True) for h1 in soup.find_all("h1")]
 
     images = []
-    for img in soup.find_all("img"):
+    for img in soup.find_all("img", limit=50):
         images.append({
             "src": img.get("src"),
             "alt": img.get("alt")
         })
+
+    print("SEO tag extraction complete", flush=True)
 
     return {
         "title": title.strip() if title else None,

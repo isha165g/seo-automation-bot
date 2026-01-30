@@ -3,20 +3,29 @@ from bs4 import BeautifulSoup
 import os
 
 def fetch_page(url):
-    print(f"Fetching URL: {url}")
-
     try:
-        response = requests.get(url, timeout=10)
+        print(f"Fetching URL: {url}", flush=True)
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (SEO-Automation-Bot)"
+        }
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=10   # 🔑 IMPORTANT
+        )
+
+        response.raise_for_status()
+        return response.text
+
+    except requests.exceptions.Timeout:
+        print("❌ Request timed out", flush=True)
+        return None
+
     except requests.exceptions.RequestException as e:
-        print("Error fetching page:", e)
+        print(f"❌ Error fetching page: {e}", flush=True)
         return None
-
-    if response.status_code != 200:
-        print("Non-200 status code:", response.status_code)
-        return None
-
-    soup = BeautifulSoup(response.text, "html.parser")
-    return soup.prettify()
 
 def save_page(html_content, filename):
     os.makedirs("data/pages", exist_ok=True)

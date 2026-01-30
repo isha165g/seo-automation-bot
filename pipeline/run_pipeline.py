@@ -1,5 +1,11 @@
 import sys
 sys.path.append(".")
+import os
+import io
+
+UI_MODE = False
+
+CONFIG_FILE = "ui_backend/config.txt"
 
 from crawler.static_crawler import fetch_page
 from crawler.dynamic_crawler import fetch_dynamic_page
@@ -13,41 +19,86 @@ from ai_engine.tasks import generate_meta_description
 from ai_engine.tasks import generate_alt_text
 from ai_engine.tasks import rewrite_title
 
-USE_DYNAMIC_RENDERING = True  # set False for static sites
-TARGET_URL = "https://react.dev"
+if len(sys.argv) >= 3:
+    TARGET_URL = sys.argv[1]
+    USE_DYNAMIC_RENDERING = sys.argv[2].lower() == "true"
+    UI_MODE = True
+else:
+    TARGET_URL = "https://www.wileyindia.com/resources_engineering/"
+    USE_DYNAMIC_RENDERING = False
 
+if UI_MODE:
+    sys.stdout = io.StringIO()
+ 
+def log(message):
+    if not UI_MODE:
+        print(message, flush=True) 
+    
 ORIGINAL_HTML = "data/pages/home.html"
 MODIFIED_HTML = "data/pages/home_modified.html"
 
+
 def main():
-    print("\n=== SEO AUTOMATION PIPELINE STARTED ===\n")
+    pipeline_result = {
+        "url": TARGET_URL,
+        "crawler": "dynamic" if USE_DYNAMIC_RENDERING or UI_MODE else "static",
+        "summary": {
+            "meta_description": "unknown",
+            "title": "unknown",
+            "images_missing_alt": 0
+        },
+        "ai_actions": {},
+        "diffs": []
+    }
+    
+    print("\n=== SEO AUTOMATION PIPELINE STARTED ===\n", flush=True)
 
     # 1. Load HTML
-    if USE_DYNAMIC_RENDERING:
-        print("Using dynamic crawler (Playwright)...")
+    if UI_MODE:
+        log("Using dynamic crawler (forced for UI)...")
         html = fetch_dynamic_page(TARGET_URL)
     else:
-        print("Using static crawler...")
-        html = fetch_page(TARGET_URL)
-
-    with open(ORIGINAL_HTML, "w", encoding="utf-8") as f:
-        f.write(html)
+        if USE_DYNAMIC_RENDERING:
+            print("Using dynamic crawler (Playwright)...", flush=True)
+            html = fetch_dynamic_page(TARGET_URL)
+        else:
+            print("Using static crawler...", flush=True)
+            html = fetch_page(TARGET_URL)
 
     if not html:
         print("Failed to load HTML")
         return
-
+    
+    with open(ORIGINAL_HTML, "w", encoding="utf-8") as f:
+        f.write(html)
+        
     # 2. Parse SEO data
     seo_data = extract_seo_tags(html)
-    print("Parsed SEO data ✓")
+    log("Pipeline progressing after dynamic fetch...")
+    log("Parsed SEO data ✓")
 
     # 3. Run SEO rules
     seo_report = run_seo_checks(seo_data)
-    print("SEO rules executed ✓")
+    log("SEO rules executed ✓")
 
     # 4. Generate fix suggestions
     fixes = generate_fix_suggestions(seo_report)
-    print("Fix suggestions generated ✓")
+    log("Fix suggestions generated ✓")
+
+    pipeline_result["summary"] = {
+        "meta_description": (
+            "missing"
+            if "Missing meta description" in seo_report.get("meta_description", [])
+            else "present"
+        ),
+        "title": (
+            "issues"
+            if seo_report.get("title")
+            else "ok"
+        ),
+        "images_missing_alt": len(seo_report.get("images", []))
+    }
+
 
     # 5a. AI for meta description (only if missing)
     ai_text = None
@@ -58,6 +109,7 @@ def main():
         print("AI suggestion:", ai_text)
     else:
         print("Meta description already present — no AI action needed.")    
+    pipeline_result["ai_actions"]["meta_description"] = ai_text
     
     # 5b. AI for image alt (only if missing)
     alt_texts = {}
@@ -89,6 +141,7 @@ def main():
 
     else:
         print("\nAlt text for image exists — no AI action needed.")
+    pipeline_result["ai_actions"]["alt_texts"] = alt_texts
         
     # 5c. AI for title (only if missing)
     new_title = None
@@ -101,7 +154,8 @@ def main():
         print("AI title suggestion:", new_title)
     else:
         print("\nTitle is SEO-friendly — no AI action needed.")
-
+    pipeline_result["ai_actions"]["title"] = new_title
+    
     # 6. Apply fixes to HTML
     modified_html = modify_html(
         html,
@@ -113,29 +167,46 @@ def main():
     with open(MODIFIED_HTML, "w", encoding="utf-8") as f:
         f.write(modified_html)
 
-    print("\nHTML modifications prepared ✓")
+    log("HTML modifications prepared ✓")
 
     # 7. Generate diff
     diffs = generate_diff(html, modified_html)
 
-    print("\n=== PROPOSED CHANGES ===")
+    log("=== PROPOSED CHANGES ===")
     for op, text in diffs:
         if op == 1:
-            print("[ADDED]", text.strip())
+            pipeline_result["diffs"].append({
+                "type": "added",
+                "content": text.strip()
+            })
         elif op == -1:
-            print("[REMOVED]", text.strip())
+            pipeline_result["diffs"].append({
+                "type": "removed",
+                "content": text.strip()
+            })
+
+    # --- SAFETY: ensure summary always exists ---
+    if not pipeline_result.get("summary"):
+        pipeline_result["summary"] = {
+            "meta_description": "unknown",
+            "title": "unknown",
+            "images_missing_alt": 0
+        }
 
     # 8. Human approval
-    approve = input("\nApprove these changes? (y/n): ").lower()
-
-    if approve == "y":
-        print("\nChanges approved ✅")
-        print("You can now commit these changes.")
+    if UI_MODE:
+        import json
+        sys.__stdout__.write(json.dumps(pipeline_result))
+        return
     else:
-        print("\nChanges rejected ❌")
-        print("Original HTML remains untouched.")
+        approve = input("\nApprove these changes? (y/n): ").lower()
 
-    print("\n=== PIPELINE COMPLETE ===")
+        if approve == "y":
+            print("\nChanges approved ✅", flush=True)
+        else:
+            print("\nChanges rejected ❌", flush=True)
+
+        print("\n=== PIPELINE COMPLETE ===", flush=True)
 
 if __name__ == "__main__":
     main()

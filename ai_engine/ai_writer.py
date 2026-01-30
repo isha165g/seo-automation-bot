@@ -2,7 +2,7 @@ import subprocess
 
 def generate_text(prompt):
     process = subprocess.Popen(
-        ["ollama", "run", "phi"], #mistral / phi
+        ["ollama", "run", "mistral"], #mistral / phi
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>AI SEO Automation Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      padding: 40px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 10px 0;
+      width: 100%;
+      border-radius: 6px;
+      border: none;
+    }
+
+    button {
+      background: #22c55e;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    pre {
+      background: #020617;
+      padding: 20px;
+      margin-top: 20px;
+      white-space: pre-wrap;
+      border-radius: 6px;
+      color: #0f0;
+      max-height: 400px;
+      overflow: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>AI SEO Automation Tool</h1>
+
+  <label>
+    Website URL:
+    <input
+      type="text"
+      id="url"
+      value="https://www.wileyindia.com/resources_engineering/"
+    />
+  </label>
+
+  <label>
+    <input type="checkbox" id="dynamic" checked />
+    Dynamic / React Website
+  </label>
+
+  <button onclick="analyzeWebsite()">Analyze Website</button>
+
+  <!-- SUMMARY CARDS -->
+  <div id="summary" style="display:flex; gap:16px; margin-top:20px;"></div>
+
+  <h2>AI Suggestions</h2>
+  <div id="aiSuggestions" style="margin-top: 16px;"></div>
+
+  <h2>Pipeline Output (JSON)</h2>
+  <pre id="rawJson">Waiting...</pre>
+
+  <script src="app.js"></script>
+</body>
+</html>
