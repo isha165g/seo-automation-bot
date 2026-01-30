@@ -1,83 +1,71 @@
-import subprocess
+import os
+from google import genai
 
-def generate_text(prompt):
-    process = subprocess.Popen(
-        ["ollama", "run", "phi"], #mistral / phi
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
-        errors="ignore"
-    )
+# Create Gemini client
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-    try:
-        stdout, stderr = process.communicate(prompt, timeout=20)
-    except Exception:
-        process.kill()
+
+def clean_ai_output(text):
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if not lines:
+        return ""
+    return lines[0]
+
+
+def clean_alt_text(text):
+    if not text:
         return None
 
+    words = text.split()
+    if not (5 <= len(words) <= 9):
+        return None
 
-    def clean_ai_output(text):
-        # Take only the first non-empty line
-        lines = [line.strip() for line in text.splitlines() if line.strip()]
-        if not lines:
-            return ""
-        return lines[0]
+    # hard reject if any preposition sneaks in
+    forbidden = {"to", "on", "at", "in", "with", "during"}
+    if any(w.lower() in forbidden for w in words):
+        return None
 
-    def clean_alt_text(text):
-        if len(text) > 80:
-            return None
-        
-        text = text.strip().strip('"').strip("'")
+    return text.strip()
 
-        # Remove obvious AI chatter
-        banned_phrases = [
-        "alt text", "this is", "would be", "i am", "i'm",
-        "assistant", "the output", "the image shows", "description"
-    ]
 
-        lowered = text.lower()
-        for phrase in banned_phrases:
-            if phrase in lowered:
-                return None  # reject bad output
+def generate_text(prompt):
+    try:
+        response = client.models.generate_content(
+            model="gemini-3-flash-preview",
+            contents=prompt,
+            config={
+                "temperature": 0.4,
+                "max_output_tokens": 200
+            }
+        )
+    except Exception as e:
+        print("Gemini error:", e)
+        return None
 
-        # Keep only first sentence
-        if "." in text:
-            text = text.split(".")[0]
+    if not response or not response.text:
+        return None
 
-        # Enforce max words
-        words = text.split()
-        if len(words) > 10:
-            text = " ".join(words[:10])
-
-        return text
-
-    cleaned = clean_ai_output(stdout)
-    cleaned = cleaned.strip('"').strip("'")
+    cleaned = clean_ai_output(response.text)
 
     MAX_LEN = 155
     if len(cleaned) > MAX_LEN:
         truncated = cleaned[:MAX_LEN]
-        # Try to cut at last full stop
         if "." in truncated:
             truncated = truncated.rsplit(".", 1)[0] + "."
         cleaned = truncated
 
-    cleaned_alt = clean_alt_text(cleaned)
-    return cleaned_alt
+    return clean_alt_text(cleaned)
 
 
 if __name__ == "__main__":
     prompt = (
-    "Write ONE single-sentence SEO meta description.\n"
-    "- Maximum 155 characters\n"
-    "- Do NOT write explanations, stories, or examples\n"
-    "- Do NOT use quotes\n"
-    "- Do NOT add headings or new lines\n"
-    "- Output ONLY the meta description text\n"
-    "Context: ERP and AI services company."
-)
+        "Write ONE single-sentence SEO meta description.\n"
+        "- Maximum 155 characters\n"
+        "- Do NOT write explanations\n"
+        "- Do NOT use quotes\n"
+        "- Output ONLY the meta description text\n"
+        "Context: ERP and AI services company."
+    )
 
     text = generate_text(prompt)
 

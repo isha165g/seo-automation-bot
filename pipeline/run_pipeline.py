@@ -3,18 +3,17 @@ sys.path.append(".")
 
 from crawler.static_crawler import fetch_page
 from crawler.dynamic_crawler import fetch_dynamic_page
-from parser.parser import load_html, extract_seo_tags
+from parser.parser import extract_seo_tags
 from seo_rules.rules import run_seo_checks
 from suggestions.suggestions import generate_fix_suggestions
 from modifier.modifier import modify_html
 from diff_engine.diff_generator import generate_diff
-from ai_engine.ai_writer import generate_text
 from ai_engine.tasks import generate_meta_description
 from ai_engine.tasks import generate_alt_text
 from ai_engine.tasks import rewrite_title
 
 USE_DYNAMIC_RENDERING = True  # set False for static sites
-TARGET_URL = "https://react.dev"
+TARGET_URL = "https://example.com/"
 
 ORIGINAL_HTML = "data/pages/home.html"
 MODIFIED_HTML = "data/pages/home_modified.html"

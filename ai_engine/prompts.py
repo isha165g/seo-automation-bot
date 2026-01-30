@@ -16,13 +16,31 @@ META_DESCRIPTION_PROMPT = (
 )
 
 ALT_TEXT_PROMPT = (
-    "Write short, descriptive alt text for an image.\n"
-    "- Maximum 10 words\n"
-    "- No filler words\n"
-    "- No punctuation\n"
+    "Generate alt text for an image.\n\n"
+
+    "FORMAT (must follow exactly):\n"
+    "<subject> <action> <object>\n\n"
+
+    "STRICT RULES:\n"
+    "- Use 5 to 9 words only\n"
+    "- Use ONLY nouns and verbs\n"
+    "- Do NOT use prepositions (no to, on, at, in, with, during)\n"
+    "- Do NOT use punctuation\n"
+    "- Do NOT use years or numbers\n"
+    "- End with a concrete object noun\n"
+    "- Do NOT write a sentence\n"
     "- Output ONLY the alt text\n\n"
-    "Image context: {context}"
+
+    "Image context:\n"
+    "{context}\n\n"
+
+    "Examples (follow style exactly):\n"
+    "Professional speakers presenting conference stage\n"
+    "Andrew delivering keynote presentation\n"
+    "Lauren presenting slides team meeting\n"
+    "Musician singing microphone stage\n"
 )
+
 
 TITLE_REWRITE_PROMPT = (
     "Rewrite the page title for SEO.\n"
