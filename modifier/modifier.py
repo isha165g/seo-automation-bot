@@ -23,7 +23,12 @@ def modify_html(html, meta_description_text=None, alt_texts=None, new_title=None
     if alt_texts:
         images = soup.find_all("img")
 
-        for idx, alt in alt_texts.items():
+        for idx_str, alt in alt_texts.items():
+            try:
+                idx = int(idx_str)
+            except ValueError:
+                continue
+
             if idx >= len(images):
                 continue
 

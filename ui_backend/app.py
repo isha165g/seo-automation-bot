@@ -1,41 +1,28 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import subprocess
-import sys
-import os
+
+# IMPORT YOUR PIPELINE FUNCTION
+from pipeline.run_pipeline import run_pipeline  # we’ll define this next
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 class AnalyzeRequest(BaseModel):
     url: str
-    dynamic: bool
+    dynamic: bool = True
+
 
 @app.post("/analyze")
 def analyze_site(data: AnalyzeRequest):
-    process = subprocess.run(
-        [
-            sys.executable,
-            "-u",  # 🔑 FORCE UNBUFFERED OUTPUT
-            "pipeline/run_pipeline.py",
-            data.url,
-            str(data.dynamic)
-        ],
-        capture_output=True,
-        text=True,
-        timeout=120,
-        env={**os.environ, "PYTHONUNBUFFERED": "1"}
+    result = run_pipeline(
+        url=data.url,
+        use_dynamic=data.dynamic
     )
-
-    return {
-        "output": process.stdout,
-        "errors": process.stderr
-    }
+    return result

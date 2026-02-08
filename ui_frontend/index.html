@@ -2,69 +2,167 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>AI SEO Automation Tool</title>
+  <title>SEO Intelligence Engine</title>
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
+      font-family: Inter, Arial, sans-serif;
+      background: radial-gradient(circle at top, #020617, #000);
+      color: #e5e7eb;
       padding: 40px;
     }
 
+    h1 {
+      font-size: 34px;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      margin-bottom: 30px;
+    }
+
     input, button {
-      padding: 10px;
-      margin: 10px 0;
+      padding: 12px;
+      margin: 8px 0;
       width: 100%;
-      border-radius: 6px;
+      border-radius: 8px;
       border: none;
+      font-size: 15px;
     }
 
     button {
-      background: #22c55e;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
       font-weight: bold;
       cursor: pointer;
+      color: black;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 25px;
+    }
+
+    .card {
+      background: #020617;
+      border-radius: 12px;
+      padding: 18px;
+      border: 1px solid #1e293b;
+      box-shadow: 0 0 30px rgba(34,197,94,0.05);
+    }
+
+    .card.good {
+      border-left: 6px solid #22c55e;
+    }
+
+    .card.bad {
+      border-left: 6px solid #ef4444;
+    }
+
+    .card h3 {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      font-size: 22px;
+      font-weight: bold;
     }
 
     pre {
-      background: #020617;
-      padding: 20px;
-      margin-top: 20px;
-      white-space: pre-wrap;
-      border-radius: 6px;
-      color: #0f0;
-      max-height: 400px;
+      background: #000;
+      padding: 16px;
+      border-radius: 10px;
+      max-height: 300px;
       overflow: auto;
+      font-size: 13px;
+    }
+
+    .section {
+      margin-top: 40px;
+    }
+
+    .ai-box {
+      background: linear-gradient(135deg, #020617, #020617);
+      border: 1px solid #38bdf8;
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .ai-box h3 {
+      color: #38bdf8;
+      margin-bottom: 10px;
+    }
+
+    .cta {
+      margin-top: 20px;
+      display: flex;
+      gap: 16px;
+    }
+
+    .approve {
+      background: #22c55e;
+    }
+
+    .reject {
+      background: #ef4444;
+      color: white;
     }
   </style>
 </head>
 
 <body>
-  <h1>AI SEO Automation Tool</h1>
 
-  <label>
-    Website URL:
-    <input
-      type="text"
-      id="url"
-      value="https://www.wileyindia.com/resources_engineering/"
-    />
-  </label>
+  <h1>SEO Intelligence Engine</h1>
+  <div class="subtitle">
+    AI-powered SEO analysis with human-in-the-loop approval
+  </div>
 
+  <input id="url" value="https://www.wileyindia.com/resources_engineering/" />
   <label>
     <input type="checkbox" id="dynamic" checked />
-    Dynamic / React Website
+    Dynamic / SPA Website
   </label>
 
-  <button onclick="analyzeWebsite()">Analyze Website</button>
+  <button onclick="analyzeWebsite()">Run SEO Intelligence</button>
 
-  <!-- SUMMARY CARDS -->
-  <div id="summary" style="display:flex; gap:16px; margin-top:20px;"></div>
+  <!-- SUMMARY -->
+  <div id="summary" class="grid"></div>
 
-  <h2>AI Suggestions</h2>
-  <div id="aiSuggestions" style="margin-top: 16px;"></div>
+  <!-- AI INSIGHTS -->
+  <div class="section ai-box">
+    <h3>AI Insights</h3>
+    <div id="aiSuggestions">Waiting for analysis…</div>
+  </div>
 
-  <h2>Pipeline Output (JSON)</h2>
-  <pre id="rawJson">Waiting...</pre>
+  <!-- HTML CHANGES -->
+  <div class="section">
+    <h2>Before vs After (HTML)</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Original</h3>
+        <pre id="originalHtml"></pre>
+      </div>
+      <div class="card">
+        <h3>AI-Optimized</h3>
+        <pre id="modifiedHtml"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION -->
+  <div class="section cta">
+    <button class="approve" onclick="approve()">Approve Changes</button>
+    <button class="reject" onclick="reject()">Reject</button>
+  </div>
+
+  <div class="section">
+    <h2>Pipeline Output (Debug JSON)</h2>
+    <pre id="rawJson">Waiting...</pre>
+  </div>
 
   <script src="app.js"></script>
 </body>

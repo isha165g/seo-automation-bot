@@ -6,29 +6,23 @@ async function analyzeWebsite() {
   const dynamic = document.getElementById("dynamic").checked;
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/analyze", {
+    const res = await fetch("http://127.0.0.1:8000/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url, dynamic })
     });
 
-    const raw = await response.json();
-    const data = JSON.parse(raw.output);  
-
-    renderSummary(data.summary);
-    console.log("Parsed pipeline JSON:", data);
-
-    // Show JSON (debug-friendly)
+    const data = await res.json();
     rawJson.innerText = JSON.stringify(data, null, 2);
 
-    // Render summary cards
-    if (data.summary) {
-        renderSummary(data.summary);
-        renderAISuggestions(data.ai_actions);
-    } else {
-        document.getElementById("summary").innerHTML =
-            "<p style='color:red'>No SEO summary available</p>";
-    }
+    renderSummary(data.summary);
+    renderAISuggestions(data.ai_actions, data.ai_insights);
+
+    document.getElementById("originalHtml").innerText =
+      data.original_html || "Not available";
+
+    document.getElementById("modifiedHtml").innerText =
+      data.modified_html || "No changes generated";
 
   } catch (err) {
     rawJson.innerText = "Error: " + err.message;
@@ -36,117 +30,76 @@ async function analyzeWebsite() {
 }
 
 function renderSummary(summary) {
-  if (!summary) return;
-
   const container = document.getElementById("summary");
   container.innerHTML = "";
 
-  container.appendChild(
-    createCard(
-      "Meta Description",
-      summary.meta_description === "present" ? "Present" : "Missing",
-      summary.meta_description === "present"
-    )
-  );
+  container.appendChild(createCard(
+    "Meta Description",
+    summary.meta_description,
+    summary.meta_description === "present"
+  ));
 
-  container.appendChild(
-    createCard(
-      "Title",
-      summary.title === "ok" ? "SEO Friendly" : "Issues Found",
-      summary.title === "ok"
-    )
-  );
+  container.appendChild(createCard(
+    "Title",
+    summary.title,
+    summary.title === "ok"
+  ));
 
-  container.appendChild(
-    createCard(
-      "Images Missing Alt",
-      summary.images_missing_alt ?? 0,
-      (summary.images_missing_alt ?? 0) === 0
-    )
-  );
+  container.appendChild(createCard(
+    "Images Missing Alt",
+    summary.images_missing_alt,
+    summary.images_missing_alt === 0
+  ));
 }
 
 function createCard(title, value, isGood) {
-  const card = document.createElement("div");
-  card.style.padding = "16px";
-  card.style.borderRadius = "8px";
-  card.style.minWidth = "180px";
-  card.style.background = isGood ? "#14532d" : "#7f1d1d";
-  card.style.border = `2px solid ${isGood ? "#22c55e" : "#ef4444"}`;
-
-  card.innerHTML = `
-    <h3>${title}</h3>
-    <p style="font-size:18px; font-weight:bold">${value}</p>
-  `;
-
-  return card;
-}
-
-
-function renderAISuggestions(ai) {
-  const container = document.getElementById("aiSuggestions");
-  container.innerHTML = "";
-
-  // Meta Description
-  container.appendChild(
-    createSuggestionBlock(
-      "Meta Description",
-      ai.meta_description || "No change needed"
-    )
-  );
-
-  // Title Rewrite
-  container.appendChild(
-    createSuggestionBlock(
-      "Title Rewrite",
-      ai.title || "No change needed"
-    )
-  );
-
-  // Alt Text Suggestions
-  const altTexts = ai.alt_texts || {};
-  let altHtml = "";
-
-  if (Object.keys(altTexts).length === 0) {
-    altHtml = `<span>No alt text changes needed</span>`;
-  } else {
-    for (const idx in altTexts) {
-      altHtml += `
-        <div style="margin-bottom:6px;">
-          <strong style="color:#facc15">Image ${idx}</strong>
-          <span style="color:#e5e7eb"> → "${altTexts[idx]}"</span>
-        </div>
-      `;
-    }
-  }
-
-  container.appendChild(
-    createSuggestionBlock(
-      "Image Alt Text Suggestions",
-      altHtml
-    )
-  );
-}
-
-function createSuggestionBlock(title, value) {
   const div = document.createElement("div");
-
-  div.style.padding = "14px";
-  div.style.marginBottom = "14px";
-  div.style.borderRadius = "8px";
-  div.style.background = "#0f172a";
-  div.style.border = "1px solid #475569";
-  div.style.color = "#e5e7eb";
-
-  div.innerHTML = `
-    <div style="font-weight:bold; color:#38bdf8; margin-bottom:8px;">
-      ${title}
-    </div>
-    <div>
-      ${value}
-    </div>
-  `;
-
+  div.className = `card ${isGood ? "good" : "bad"}`;
+  div.innerHTML = `<h3>${title}</h3><p><b>${value}</b></p>`;
   return div;
 }
 
+function renderAISuggestions(ai, insightText) {
+  const container = document.getElementById("aiSuggestions");
+  container.innerHTML = "";
+
+  container.innerHTML += `
+    <div style="
+        background:#020617;
+        border-left:4px solid #38bdf8;
+        padding:12px;
+        margin-bottom:12px;
+        border-radius:6px;
+    ">
+        <p>🧠 <b>AI Insight:</b></p>
+        <p>${insightText || "No insights generated."}</p>
+    </div>
+    `;
+
+  container.innerHTML += `<p><b>Meta Description:</b> ${ai.meta_description || "—"}</p>`;
+  container.innerHTML += `<p><b>Title:</b> ${ai.title || "—"}</p>`;
+
+  const alts = ai.alt_texts || {};
+  if (Object.keys(alts).length === 0) {
+    container.innerHTML += `<p><b>Alt Text:</b> No changes</p>`;
+  } else {
+    container.innerHTML += `<p><b>Alt Text Suggestions:</b></p>`;
+    for (const k in alts) {
+      container.innerHTML += `<p>Image ${k}: ${alts[k]}</p>`;
+    }
+  }
+}
+
+function copyModified() {
+  const text = document.getElementById("modifiedHtml").innerText;
+  navigator.clipboard.writeText(text);
+  alert("Modified HTML copied to clipboard!");
+}
+
+function approve() {
+  alert("Changes approved. You can now deploy or save the HTML.");
+}
+
+function reject() {
+  alert("Changes rejected. Original HTML remains unchanged.");
+}
