@@ -17,6 +17,7 @@ async function analyzeWebsite() {
 
     renderSummary(data.summary);
     renderAISuggestions(data.ai_actions, data.ai_insights);
+    renderOnPageSEO(data.onpage_score);
 
     document.getElementById("originalHtml").innerText =
       data.original_html || "Not available";
@@ -103,3 +104,40 @@ function approve() {
 function reject() {
   alert("Changes rejected. Original HTML remains unchanged.");
 }
+
+function renderOnPageSEO(scoreData) {
+  if (!scoreData) return;
+
+  const score = scoreData.on_page_score;
+  const issues = scoreData.issues || [];
+
+  const scoreValue = document.getElementById("onpageScoreValue");
+  const scoreBar = document.getElementById("scoreBar");
+  const issuesList = document.getElementById("onpageIssues");
+  const scoreCard = document.getElementById("onpageScoreCard");
+
+  scoreValue.innerText = `${score} / 100`;
+  scoreBar.style.width = `${score}%`;
+
+  // Severity color
+  let color = "#22c55e"; // green
+  if (score < 80) color = "#facc15"; // yellow
+  if (score < 60) color = "#ef4444"; // red
+
+  scoreBar.style.background = color;
+  scoreCard.style.borderLeft = `6px solid ${color}`;
+
+  // Issues
+  issuesList.innerHTML = "";
+  if (issues.length === 0) {
+    issuesList.innerHTML = "<li>✅ No major issues detected</li>";
+  } else {
+    issues.forEach(issue => {
+      const li = document.createElement("li");
+      li.innerText = `⚠ ${issue}`;
+      li.style.listStyleType = 'none';
+      issuesList.appendChild(li);
+    });
+  }
+}
+
