@@ -9,6 +9,8 @@ from ai_engine.tasks import (
     rewrite_title,
 )
 from ai_engine.insights import generate_ai_insights
+from seo_sources.onpage_analyzer import run_onpage_analyzer
+from seo_sources.seo_scoring import score_seoanalyzer
 
 def run_pipeline(url: str, use_dynamic: bool):
     # 1. Fetch HTML
@@ -26,7 +28,9 @@ def run_pipeline(url: str, use_dynamic: bool):
 
     # 3. Run rules
     seo_report = run_seo_checks(seo_data)
-    ai_insights = generate_ai_insights(seo_report)
+    seoanalyzer_report = run_onpage_analyzer(url)
+    onpage_score = score_seoanalyzer(seoanalyzer_report)
+    ai_insights = generate_ai_insights(seo_report, onpage_score)
 
     # 4. AI actions
     ai_meta = None
@@ -72,6 +76,8 @@ def run_pipeline(url: str, use_dynamic: bool):
             "alt_texts": alt_texts,
         },
         "ai_insights": ai_insights,
+        "onpage_seo": seoanalyzer_report,
+        "onpage_score": onpage_score,
         "original_html": html,
         "modified_html": modified_html
     }

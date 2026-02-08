@@ -1,48 +1,60 @@
 from ai_engine.ai_writer import generate_text
 
-def generate_ai_insights(seo_report: dict):
+
+def generate_ai_insights(seo_report: dict, onpage_score: dict):
     issues = []
 
+    # ---- Rule-based issues ----
     if "Missing meta description" in seo_report.get("meta_description", []):
         issues.append("missing meta description")
-
-    if seo_report.get("images"):
-        issues.append(f"{len(seo_report['images'])} images missing alt text")
 
     if seo_report.get("title"):
         issues.append("page title not optimized for SEO")
 
-    # No issues case
+    if seo_report.get("images"):
+        issues.append(f"{len(seo_report['images'])} images missing alt text")
+
+    # ---- On-page analyzer issues ----
+    onpage_issues = onpage_score.get("issues", [])
+    score_value = onpage_score.get("on_page_score", 100)
+
+    issues.extend(onpage_issues)
+
+    # Remove duplicates
+    issues = list(dict.fromkeys(issues))
+
+    # ---- No issues case ----
     if not issues:
         return (
             "The page demonstrates strong adherence to SEO best practices. "
-            "Metadata, accessibility attributes, and structural elements are "
-            "properly implemented, resulting in good search visibility and usability."
+            "Metadata, accessibility attributes, and content structure are "
+            "well optimized, supporting strong search visibility and usability."
         )
 
     issues_text = ", ".join(issues)
 
+    # ---- Gemini prompt ----
     prompt = (
         "You are an experienced SEO consultant writing an audit summary.\n"
-        "Write ONE complete paragraph (3 to 4 sentences).\n"
-        "The paragraph must be fully formed and end cleanly.\n"
-        "Explain the impact of the detected SEO issues.\n"
-        "Do NOT give instructions or solutions.\n"
+        "Write ONE professional paragraph of 3 to 4 complete sentences.\n"
+        "Explain the impact of the detected issues on SEO performance.\n"
+        "Do NOT provide fixes or step-by-step instructions.\n"
         "Do NOT mention AI, tools, or models.\n"
-        "Use a professional, report-style tone.\n\n"
+        "Use a formal audit-report tone.\n\n"
+        f"On-page SEO score: {score_value} out of 100.\n"
         f"Detected SEO issues: {issues_text}"
     )
 
     insight = generate_text(prompt)
 
-    # 🛡️ Hard quality gate
-    if not insight or len(insight.split()) < 20 or insight.endswith(("for", "of", "to", "with")):
+    # ---- Hard fallback (never return weak text) ----
+    if not insight or len(insight.split()) < 25:
         return (
-            "The analysis reveals notable SEO and accessibility gaps that may "
-            "limit search visibility and user experience. Several images lack "
-            "descriptive alternative text, affecting accessibility compliance and "
-            "image search performance. Addressing these gaps would strengthen "
-            "overall content clarity and discoverability."
+            "The audit indicates multiple on-page SEO and accessibility gaps "
+            "that may reduce search visibility and user engagement. A low on-page "
+            "SEO score reflects weaknesses in metadata, heading structure, and "
+            "image accessibility. Addressing these areas would significantly "
+            "improve overall discoverability and content clarity."
         )
 
     return insight
